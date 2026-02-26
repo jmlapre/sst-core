@@ -25,13 +25,16 @@
 #include <list>
 #include <sstream>
 #include <stdexcept>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <utility>
 
 namespace SST::IMPL::Interactive {
 
+
 SimpleDebugger::SimpleDebugger(Params& params) :
-    InteractiveConsole()
+    InteractiveConsole(),
+    dout(std::cout, 50, 160)
 {
     // registerAsPrimaryComponent();
 
@@ -180,6 +183,12 @@ SimpleDebugger::SimpleDebugger(Params& params) :
 
     // Callback for directory listing strings
     cmdLineEditor.set_listing_callback([this](std::list<std::string>& vec) { get_listing_strings(vec); });
+
+    struct winsize size;
+    if ( ioctl(STDERR_FILENO, TIOCGWINSZ, &size) == 0 ) {
+        dout.setLineWidth(size.ws_col);
+        dout.setLineCount(size.ws_row);
+    }
 }
 
 SimpleDebugger::~SimpleDebugger()
@@ -191,6 +200,13 @@ SimpleDebugger::~SimpleDebugger()
 void
 SimpleDebugger::execute(const std::string& msg)
 {
+
+    struct winsize size;
+    if ( ioctl(STDERR_FILENO, TIOCGWINSZ, &size) == 0 ) {
+        dout.setLineWidth(size.ws_col);
+        dout.setLineCount(size.ws_row);
+    }
+
     printf("Entering interactive mode at time %" PRI_SIMTIME " \n", getCurrentSimCycle());
     printf("%s\n", msg.c_str());
 
@@ -463,12 +479,13 @@ SimpleDebugger::cmd_ls(std::vector<std::string>& UNUSED(tokens))
     auto& vars = obj_->getVariables();
     for ( auto& x : vars ) {
         if ( x.second->isFundamental() ) {
-            std::cout << x.first << " = " << x.second->get() << " (" << x.second->getType() << ")" << std::endl;
+            dout << x.first << " = " << x.second->get() << " (" << x.second->getType() << ")" << std::endl;
         }
         else {
-            std::cout << x.first.c_str() << "/ (" << x.second->getType() << ")\n";
+            dout << x.first.c_str() << "/ (" << x.second->getType() << ")\n";
         }
     }
+    dout << dreset;
     return true;
 }
 
