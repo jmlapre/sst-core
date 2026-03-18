@@ -316,27 +316,6 @@ public:
     */
     bool isConfigured() { return type != UNINITIALIZED; }
 
-    /**
-       Get the latency on the link in units of core atomic time base
-
-       NOTE: This is a core only API and not part of the public stable API
-    */
-    SimTime_t getLatency() { return latency; }
-
-    /**
-       Get the delivery_info for the link
-
-       NOTE: This is a core only API and not part of the public stable API
-    */
-    uintptr_t getDeliveryInfo() { return delivery_info; }
-
-    /**
-       Get the pair_link
-
-       NOTE: This is a core only API and not part of the public stable API
-    */
-    Link* getPairLink() { return pair_link; }
-
 
 #ifdef __SST_DEBUG_EVENT_TRACKING__
     void setSendingComponentInfo(const std::string& comp_in, const std::string& type_in, const std::string& port_in)
@@ -380,6 +359,23 @@ protected:
     }
 
     /**
+       Get the latency on the link in units of core atomic time base
+
+       NOTE: This is a core only API and not part of the public stable API
+    */
+    SimTime_t getLatency() { return latency; }
+
+    /**
+       Get the delivery_info for the link
+    */
+    uintptr_t getDeliveryInfo() { return delivery_info; }
+
+    /**
+       Get the pair_link
+    */
+    Link* getPairLink() { return pair_link; }
+
+    /**
        Sends an Event over a Link with an additional delay specified with a TimeConverter. I.e. the total delay is the
        Link's delay + the additional specified delay.
 
@@ -401,6 +397,12 @@ protected:
     {
         event->updateDeliveryInfo(delivery_info);
     }
+
+    /**
+       Variable used by Link restarts to know whether stored rank data for remote links is still valid (i.e. did we
+       restart with the exact same rank/thread count or not).
+    */
+    static bool is_restart_same_parallelism;
 
     // Since Links are found in pairs, I will keep all the information
     // needed for me to send and deliver an event to the other side of
