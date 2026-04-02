@@ -82,11 +82,6 @@ static PyMethodDef mlMethods[] = { { "find_module", mlFindModule, METH_VARARGS, 
     { "create_module", mlCreateModule, METH_VARARGS, "Loads an SST Element Module" },
     { "exec_module", mlExecModule, METH_VARARGS, "Loads an SST Element Module" }, { nullptr, nullptr, 0, nullptr } };
 
-#if PY_MAJOR_VERSION == 3
-#if PY_MINOR_VERSION == 8
-DISABLE_WARN_DEPRECATED_DECLARATION
-#endif
-#endif
 static PyTypeObject ModuleLoaderType = {
     SST_PY_OBJ_HEAD "ModuleLoader", /* tp_name */
     sizeof(ModuleLoaderPy_t),       /* tp_basicsize */
@@ -136,15 +131,9 @@ static PyTypeObject ModuleLoaderType = {
     0,                              /* tp_version_tag */
     nullptr,                        /* tp_finalize */
     SST_TP_VECTORCALL               /* Python3.8+ */
-    SST_TP_PRINT_DEP                /* Python3.8 only */
     SST_TP_WATCHED                  /* Python3.12+ */
     SST_TP_VERSIONS_USED            /* Python3.13+ */
 };
-#if PY_MAJOR_VERSION == 3
-#if PY_MINOR_VERSION == 8
-REENABLE_WARNING
-#endif
-#endif
 
 // I hate having to do this through a global variable
 // but there's really no other way to communicate errors from the importer
@@ -187,8 +176,7 @@ mlFindModule(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef emptyModMethods[] = { { nullptr, nullptr, 0, nullptr } };
-#if PY_MAJOR_VERSION >= 3
+static PyMethodDef        emptyModMethods[] = { { nullptr, nullptr, 0, nullptr } };
 /* This defines an empty module used if modName is not found during mlLoadModule() */
 static struct PyModuleDef emptyModDef {
     PyModuleDef_HEAD_INIT, /* m_base */
@@ -201,7 +189,6 @@ static struct PyModuleDef emptyModDef {
     nullptr,               /* m_clear */
     nullptr,               /* m_free */
 };
-#endif
 
 static PyObject*
 mlExecModule(PyObject* UNUSED(self), PyObject* args)
@@ -1054,7 +1041,6 @@ static PyMethodDef sstModuleMethods[] = {
     { nullptr, nullptr, 0, nullptr }
 };
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef sstModuleDef {
     PyModuleDef_HEAD_INIT, /* m_base */
     "sst",                 /* m_name */
@@ -1066,7 +1052,6 @@ static struct PyModuleDef sstModuleDef {
     nullptr,               /* m_clear */
     nullptr,               /* m_free */
 };
-#endif
 
 static PyObject*
 PyInit_sst()
@@ -1204,8 +1189,7 @@ SSTPythonModelDefinition::initModel(
 #endif
 
 
-    // Check to see if we need to import the coverage module (only works in Python >=3.9
-#if PY_MINOR_VERSION >= 9
+    // Check to see if we need to import the coverage module
     if ( config->enable_python_coverage() ) {
         enablePythonCoverage = true;
     }
@@ -1224,7 +1208,6 @@ SSTPythonModelDefinition::initModel(
             }
         }
     }
-#endif
 }
 
 SSTPythonModelDefinition::SSTPythonModelDefinition(
@@ -1330,7 +1313,6 @@ SSTPythonModelDefinition::createConfigGraph()
 {
     output->verbose(CALL_INFO, 2, 0, "Creating config graph for SST using Python model...\n");
 
-#if PY_MINOR_VERSION >= 9
     if ( enablePythonCoverage ) {
         // Create coverage object with a name unlikely to be used in the user script
         int startcoverageReturn = PyRun_SimpleString("import coverage\n"
@@ -1346,7 +1328,6 @@ SSTPythonModelDefinition::createConfigGraph()
             output->fatal(CALL_INFO, 1, "Execution of starting test coverage failed\n%s", loadErrors.c_str());
         }
     }
-#endif
 
     // Open the input script
     FILE* fp = fopen(scriptName.c_str(), "r");
@@ -1372,7 +1353,6 @@ SSTPythonModelDefinition::createConfigGraph()
         output->fatal(CALL_INFO, 1, "Error occurred handling the creation of the component graph in Python.\n");
     }
 
-#if PY_MINOR_VERSION >= 9
     // If coverage was enabled, stop the module and output the results
     if ( enablePythonCoverage ) {
         PyErr_Clear();
@@ -1389,7 +1369,7 @@ SSTPythonModelDefinition::createConfigGraph()
             output->fatal(CALL_INFO, 1, "Execution of stopping coverage failed\n%s", loadErrors.c_str());
         }
     }
-#endif
+
     return graph;
 }
 
