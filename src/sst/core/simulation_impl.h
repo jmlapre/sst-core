@@ -218,8 +218,11 @@ public:
     int  prepareLinks(ConfigGraph& graph, const RankInfo& myRank, SimTime_t min_part);
     int  performWireUp(ConfigGraph& graph, const RankInfo& myRank, SimTime_t min_part);
     void exchangeLinkInfo();
+
+    /** Functions to compute the current rank and thread sync intervals */
     void findRankSyncInterval();
     void findThreadSyncInterval();
+    void updateSyncMinPart();
 
     /** Setup external control actions (forced stops, signal handling */
     void setupSimActions();
@@ -386,7 +389,7 @@ public:
      */
     TimeConverter minPartToTC(SimTime_t cycles) const;
 
-    std::string initializeCheckpointInfrastructure(const std::string& prefix);
+    static void writeCheckpointConfigGraph(ConfigGraph* graph);
     void        scheduleCheckpoint();
 
     /**
@@ -479,6 +482,8 @@ public:
     void endSimulation();
     void endSimulation(SimTime_t end);
 
+    void checkIndependent();
+
     enum ShutdownMode_t {
         SHUTDOWN_CLEAN,     /* Normal shutdown */
         SHUTDOWN_SIGNAL,    /* SIGINT or SIGTERM received */
@@ -514,6 +519,7 @@ public:
     SimulatorHeartbeat*     m_heartbeat = nullptr;
     CheckpointAction*       checkpoint_action_;
     static std::string      checkpoint_directory_;
+    static std::string      checkpoint_configgraph_;
     bool                    endSim = false;
     bool                    independent; // true if no links leave thread (i.e. no syncs required)
     static std::atomic<int> untimed_msg_count;
