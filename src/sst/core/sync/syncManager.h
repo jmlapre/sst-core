@@ -34,10 +34,10 @@ class Simulation_impl;
 class ThreadSyncQueue;
 class TimeConverter;
 
-class SyncProfileToolList;
 namespace Profile {
 class SyncProfileTool;
-}
+class SyncProfileToolList;
+} // namespace Profile
 
 class RankSync
 {
@@ -73,6 +73,8 @@ public:
     SimTime_t getMaxPeriod() { return max_period; }
 
     virtual uint64_t getDataSize() const = 0;
+
+    virtual void setProfileToolList(Profile::SyncProfileToolList* UNUSED(profile_list)) {}
 
 protected:
     SimTime_t      nextSyncTime;
@@ -176,6 +178,7 @@ public:
     void           exchangeLinkInfo();
     SimTime_t      findRankSyncInterval();
     SimTime_t      findThreadSyncInterval();
+    void           updateMinPart();
     void           execute() override;
 
     /** Cause an exchange of Initialization Data to occur */
@@ -192,6 +195,11 @@ public:
     {
         rankSync_->setRestartTime(time);
         threadSync_->setRestartTime(time);
+    }
+
+    std::pair<SimTime_t, SimTime_t> getSyncIntervals()
+    {
+        return std::make_pair(rankSync_->getMaxPeriod(), threadSync_->getMaxPeriod());
     }
 
     void addProfileTool(Profile::SyncProfileTool* tool);
@@ -219,7 +227,7 @@ private:
     RealTimeManager*  real_time_;
     CheckpointAction* checkpoint_;
 
-    SyncProfileToolList* profile_tools_ = nullptr;
+    Profile::SyncProfileToolList* profile_tools_ = nullptr;
 
     void computeNextInsert(SimTime_t next_checkpoint_time = MAX_SIMTIME_T);
     void setupSyncObjects();
